@@ -2,6 +2,7 @@ package pe.edu.cibertec.patitas_frontend_wc_a.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import pe.edu.cibertec.patitas_frontend_wc_a.dto.LoginRequestDTO;
 import pe.edu.cibertec.patitas_frontend_wc_a.dto.LoginResponseDTO;
@@ -16,6 +17,9 @@ public class LoginControllerAsync {
 
     @Autowired
     WebClient webClientAutenticacion;
+
+    @Autowired
+    RestTemplate restTemplateAutenticacion;
 
     @PostMapping("/autenticar-async")
     public Mono<LoginResponseDTO> autenticar(@RequestBody LoginRequestDTO loginRequestDTO) {
@@ -70,6 +74,22 @@ public class LoginControllerAsync {
                             return Mono.just(new LogoutResponseDTO("02", "Error al cerrar sesión"));
                         }
                     });
+        } catch (Exception e) {
+            return Mono.just(new LogoutResponseDTO("99", "Error en el proceso de cierre de sesión"));
+        }
+    }
+    @PostMapping("/logout-feign")
+    public Mono<LogoutResponseDTO> cerrarSesionFeign(@RequestBody LogoutRequestDTO logoutRequestDTO) {
+        try {
+
+            LogoutResponseDTO logoutResponseDTO = restTemplateAutenticacion.postForObject("/logout", logoutRequestDTO,LogoutResponseDTO.class);
+
+            if (logoutResponseDTO.codigo().equals("00")) {
+                return Mono.just(new LogoutResponseDTO("00", "Cierre de sesión exitoso"));
+            } else {
+                return Mono.just(new LogoutResponseDTO("02", "Error al cerrar sesión"));
+            }
+
         } catch (Exception e) {
             return Mono.just(new LogoutResponseDTO("99", "Error en el proceso de cierre de sesión"));
         }
